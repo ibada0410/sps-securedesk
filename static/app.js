@@ -846,13 +846,14 @@ const PUBLIC_ROUTES = { '#/login': viewLogin, '#/signup': viewSignup, '#/forgot'
 async function render() {
   const base = (location.hash || '').split('?')[0];
   if (base === '#/sso') {           // Microsoft SSO callback hands us a session token
-    const token = new URLSearchParams(location.hash.split('?')[1] || '').get('token');
+    const params = new URLSearchParams(location.hash.split('?')[1] || '');
+    const token = params.get('token');
     if (token) {
       TOKEN = token;
       try {
         USER = await api('/me');
         sessionStorage.setItem('sps_token', TOKEN); sessionStorage.setItem('sps_user', JSON.stringify(USER));
-        location.hash = HOME[USER.role]; return;
+        location.hash = params.get('next') || HOME[USER.role]; return;
       } catch { TOKEN = null; }
     }
     location.hash = '#/login'; return;
