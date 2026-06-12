@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(python -c \"import pypdf; print\\('ok'\\)\")",
+      "PowerShell(Start-Sleep 5; \\(Invoke-WebRequest http://localhost:8000/api/health -UseBasicParsing\\).Content)",
+      "mcp__Claude_Preview__preview_start",
+      "PowerShell($p = @\\(\"$env:ProgramFiles\\\\cloudflared\\\\cloudflared.exe\", \"${env:ProgramFiles\\(x86\\)}\\\\cloudflared\\\\cloudflared.exe\", \"$env:LOCALAPPDATA\\\\Microsoft\\\\WinGet\\\\Links\\\\cloudflared.exe\"\\) | Where-Object { Test-Path $_ } | Select-Object -First 1; if \\(-not $p\\) { $p = \\(Get-ChildItem \"$env:LOCALAPPDATA\\\\Microsoft\\\\WinGet\\\\Packages\" -Recurse -Filter cloudflared.exe -ErrorAction SilentlyContinue | Select-Object -First 1\\).FullName }; $p)"
+    ]
+  }
+}
