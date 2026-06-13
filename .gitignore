@@ -6,3 +6,8 @@ uploads/
 outbox/
 *.txt
 !requirements.txt
+
+# Documentation artifacts (delivered via email, not committed)
+*.pdf
+docs/screenshots/
+docs/documentation.html

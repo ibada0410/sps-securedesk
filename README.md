@@ -5,7 +5,9 @@
 
 **Unified ticket convergence** • **Human-first approval** • **Knowledge-grounded AI** • **Enterprise RBAC**
 
-[Features](#-features) • [Tech Stack](#-tech-stack) • [Quick Start](#-quick-start) • [Architecture](#-architecture) • [Deploy Free](#-deploy-free) • [Security](#-security)
+### 🌐 Live app → **https://sps-securedesk-production.up.railway.app** &nbsp;|&nbsp; API docs → **[/docs](https://sps-securedesk-production.up.railway.app/docs)**
+
+[Features](#-features) • [Tech Stack](#-tech-stack) • [Quick Start](#-quick-start) • [Architecture](#-architecture) • [Deploy](#-deploy) • [Security](#-security)
 
 </div>
 
@@ -31,7 +33,7 @@ Three first-class **intake channels** (📧 Email, 📋 Web Form, 💬 AI Chat) 
 | **AI** | 🧠 Groq (llama-3.3-70b) • OpenAI-compatible API |
 | **Email** | 📧 SMTP + IMAP (Gmail, Office 365, etc.) • Branded HTML |
 | **Auth** | 🔐 PBKDF2-SHA256 • HMAC JWT • OAuth2 (Microsoft SSO) • 6-role RBAC |
-| **Hosting** | ☁️ Render (free tier) • 🔗 Neon PostgreSQL (free) • UptimeRobot (keep-alive) |
+| **Hosting** | ☁️ Railway (live) • 🐘 Railway PostgreSQL • 🐳 Docker build • UptimeRobot (keep-alive) |
 
 ---
 
@@ -226,9 +228,8 @@ spsnet_project/
 │   │
 │   └── styles.css       🎭 SPS brand colors + typography
 │
-├── docs/
-│   └── screenshots/     📸 UI screenshots (for README)
-│
+├── Dockerfile           🐳 Container build (Railway/any Docker host)
+├── Procfile             🏃 Process command (portable)
 ├── .env                 🔐 Secrets (not committed)
 ├── requirements.txt     📦 Dependencies (7 packages)
 ├── run.bat              🏃 Windows launcher
@@ -322,43 +323,23 @@ All secrets live in **`.env`** (never committed — see `.env.example`).
 
 ---
 
-## 🚀 Deploy for free (all pieces have permanent free tiers)
+## 🚀 Deploy
 
-### Prerequisites
-- GitHub account (free)
-- Neon.tech account (free PostgreSQL)
-- Render.com account (free hosting)
-- UptimeRobot account (free keep-alive, optional)
+This app is **deployed live on Railway** at **https://sps-securedesk-production.up.railway.app** (app + managed PostgreSQL, built from the committed `Dockerfile`). The repo is deployment-ready out of the box — `Dockerfile`, `Procfile`, `runtime.txt`, and `psycopg2-binary` are all included, and tables auto-create/auto-migrate on first start.
 
-### Step 1: Database — Neon PostgreSQL (~3 min)
+### Deploy your own (Railway, free tier — ~10 min)
 
-1. Go to **neon.tech** → Sign up (GitHub button fastest)
-2. Copy your connection string (looks like `postgresql://user:pass@host/db...`)
-3. Edit it: change `postgresql://` → `postgresql+psycopg2://` (keep everything else + `?sslmode=require`)
-
-### Step 2: Code — GitHub (~5 min)
-
-1. Go to **github.com** → New repository → name: `sps-securedesk` → Private
-2. In your project folder, run:
+1. **Push to GitHub** (your `.env` is excluded via `.gitignore` — never pushed):
    ```bash
    git remote add origin https://github.com/YOUR_USERNAME/sps-securedesk.git
    git push -u origin master
    ```
-   (Your `.env` is excluded via `.gitignore` — never pushed!)
-
-### Step 3: Hosting — Render.com (~10 min)
-
-1. Go to **render.com** → Sign up with GitHub → New → Web Service → pick your repo
-2. Fill the form:
-   - **Name**: `sps-securedesk` (becomes your URL)
-   - **Instance Type**: Free
-   - **Build**: `pip install -r requirements.txt`
-   - **Start**: `python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-3. Add **Environment Variables** (all from your `.env`):
+2. Go to **railway.app** → **New Project** → **Deploy from GitHub repo** → pick your repo. Railway detects the `Dockerfile` and builds automatically.
+3. In the same project, **+ New → Database → PostgreSQL**. Railway injects `DATABASE_URL` into your service automatically.
+4. On the app service → **Variables**, add the rest (from your `.env`):
    ```
-   DATABASE_URL = postgresql+psycopg2://...  (your edited Neon string)
-   JWT_SECRET_KEY = (generate new: python -c "import secrets; print(secrets.token_urlsafe(48))")
-   XAI_API_KEY = gsk_FXcT...
+   JWT_SECRET_KEY = (generate: python -c "import secrets; print(secrets.token_urlsafe(48))")
+   XAI_API_KEY = gsk_...
    XAI_MODEL = llama-3.3-70b-versatile
    XAI_BASE_URL = https://api.groq.com/openai/v1
    HELPDESK_EMAIL = your-email@gmail.com
@@ -370,24 +351,18 @@ All secrets live in **`.env`** (never committed — see `.env.example`).
    IMAP_USER = your-email@gmail.com
    IMAP_PASSWORD = (Gmail app password)
    EMAIL_POLL_SECONDS = 120
-   APP_BASE_URL = https://sps-securedesk.onrender.com
+   APP_BASE_URL = https://YOUR-APP.up.railway.app
    ```
-4. **Deploy** → watch the log (~3–5 min). When it says "live", open **https://sps-securedesk.onrender.com**
+5. **Settings → Networking → Generate Domain** to get your public URL, then set `APP_BASE_URL` to it so email links and password resets resolve correctly.
+6. *(Optional)* Add an **UptimeRobot** HTTP monitor on `<your-url>/api/health` at a 5-min interval so the IMAP poller runs 24/7.
 
-### Step 4: Keep-alive (optional, recommended)
-
-Render free tier **sleeps after ~15 min idle**. Add a pinger:
-
-1. Go to **uptimerobot.com** → Free sign-up
-2. **Add Monitor** → HTTP → URL: `https://sps-securedesk.onrender.com/api/health` → 5-min interval
-3. Done — your app never sleeps, IMAP runs 24/7
+> 💡 Also works on Render, Fly.io, or any Docker host — the `Dockerfile` and `Procfile` are portable.
 
 ---
 
 ## 📸 Screenshots
 
-### Login screen
-![Login page](docs/screenshots/login.png)
+Live UI walkthrough (email, form, chat, agent, approvals, reports) is in **`SPS_SecureDesk_Documentation.pdf`** and best seen on the **[live app](https://sps-securedesk-production.up.railway.app)**.
 
 ---
 
@@ -476,11 +451,11 @@ The system gracefully degrades: chat serves KB articles directly with citations;
 ### Email not ingesting
 Check `.env`: `IMAP_HOST`, `IMAP_USER`, `IMAP_PASSWORD` set? Otherwise, use Admin → **Email Center** → "Simulate inbound email" to test the workflow.
 
-### App sleeping on Render (first request slow)
-Add UptimeRobot pinger (free, ping every 5 min) → app stays awake 24/7.
+### App sleeping / first request slow (free tier)
+Add an UptimeRobot pinger (free, ping every 5 min on `/api/health`) → app stays awake 24/7.
 
-### Database connection error on Render
-Double-check `DATABASE_URL` includes `postgresql+psycopg2://` (not just `postgresql://`). Render logs show the error — check them!
+### Database connection error in production
+On Railway, the PostgreSQL plugin injects `DATABASE_URL` automatically. If you set it manually, ensure it uses the `postgresql+psycopg2://` prefix (not just `postgresql://`). Check the deploy logs for the exact error.
 
 ---
 
